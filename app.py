@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 
-from sqlalchemy import Column, Integer, String, ForeignKey, ARRAY
+from sqlalchemy import Column, Integer, String, ForeignKey, ARRAY, Float
 
 from sqlalchemy.orm import Session,declarative_base
 
@@ -54,8 +54,7 @@ class UserInfo(BaseModel):
 
 class Categories(Base):
     __tablename__ = 'Categories'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+    name = Column(String, primary_key=True, index=True)
     parent = Column(String, index=True)
 
 class Products(Base):
@@ -64,7 +63,7 @@ class Products(Base):
     name = Column(String, index=True)
     description = Column(String, index=True)
     category = Column(String, ForeignKey("Categories.name"), index=True)
-    price = Column(float, index=True)
+    price = Column(Float, index=True)
     image_url = Column(String, index=True)
 
 Base.metadata.create_all(bind=engine)
@@ -81,12 +80,12 @@ db_dependency=Annotated[Session,Depends(get_db)]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @app.post("/register",status_code=status.HTTP_201_CREATED)
-async def register(user:UserInfo, db:db_dependency):
+async def register(user:UserInfo, role:str, db:db_dependency):
     db_user = db.query(Users).filter(Users.email==user.email).first()
     if db_user:
         raise HTTPException(status_code=302,detail="Account already exists with this email.")
     db_user_password = pwd_context.hash(user.password)
-    db_user = Users(email=user.email,password=db_user_password)
+    db_user = Users(email=user.email,password=db_user_password,role=role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
