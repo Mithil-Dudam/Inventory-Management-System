@@ -35,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-URL_db = 'postgresql://postgres:password@localhost:5432/Inventory-Management-System' 
+URL_db = 'postgresql://postgres:password@localhost:5432/Inventory Management System' 
 
 engine = create_engine(URL_db)
 sessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
@@ -51,6 +51,7 @@ class Users(Base):
 class UserInfo(BaseModel):
     email:str
     password:str
+    role:str
 
 class Categories(Base):
     __tablename__ = 'Categories'
@@ -80,12 +81,12 @@ db_dependency=Annotated[Session,Depends(get_db)]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @app.post("/register",status_code=status.HTTP_201_CREATED)
-async def register(user:UserInfo, role:str, db:db_dependency):
-    db_user = db.query(Users).filter(Users.email==user.email).first()
+async def register(user:UserInfo, db:db_dependency):
+    db_user = db.query(Users).filter(Users.email==user.email, Users.role==user.role).first()
     if db_user:
         raise HTTPException(status_code=302,detail="Account already exists with this email.")
     db_user_password = pwd_context.hash(user.password)
-    db_user = Users(email=user.email,password=db_user_password,role=role)
+    db_user = Users(email=user.email,password=db_user_password,role=user.role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -93,9 +94,9 @@ async def register(user:UserInfo, role:str, db:db_dependency):
 
 @app.post("/login",status_code=status.HTTP_200_OK)
 async def login(user:UserInfo, db:db_dependency):
-    db_user = db.query(Users).filter(Users.email==user.email).first()
+    db_user = db.query(Users).filter(Users.email==user.email, Users.role==user.role).first()
     if db_user:
         if pwd_context.verify(user.password,db_user.password):
-            return{"message":"logged in sucessfully.","user_id":db_user.id, "role":db_user.role}
+            return{"message":"logged in sucessfully.","user_id":db_user.id}
         raise HTTPException(status_code=404,detail="Invalid email or password.")
     raise HTTPException(status_code=404,detail="Invalid email or password.")

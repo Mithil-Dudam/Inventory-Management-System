@@ -60,6 +60,8 @@ interface AppContextType {
   >;
   editFlag: number;
   setEditFlag: (flag: number) => void;
+  forgotPassword: number;
+  setForgotPassword: (flag: number) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -83,6 +85,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     { text: string; sent_by: number; image_url: string; chat_id: number }[]
   >([]);
   const [editFlag, setEditFlag] = useState(0);
+  const [forgotPassword, setForgotPassword] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
@@ -91,6 +94,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <AppContext.Provider
       value={{
+        forgotPassword,
+        setForgotPassword,
         userId,
         setUserId,
         chatId,
