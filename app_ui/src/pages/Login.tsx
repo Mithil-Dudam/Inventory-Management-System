@@ -18,8 +18,6 @@ function Login() {
     error,
     setError,
     setUserId,
-    forgotPassword,
-    setForgotPassword,
   } = useAppContext();
 
   const BackToSelectLogin = () => {
@@ -42,6 +40,7 @@ function Login() {
     setEmail("");
     setPassword("");
     setError(null);
+    setFlag(1);
   };
 
   const ToForgotPassword = () => {
@@ -49,6 +48,7 @@ function Login() {
     setEmail("");
     setPassword("");
     setError(null);
+    setEditFlag(0);
   };
 
   const Register = async () => {
@@ -99,6 +99,53 @@ function Login() {
         setError(error.response.data.detail);
       } else {
         setError("Error: Couldnt perform login");
+      }
+    }
+  };
+
+  const GenerateCode = async () => {
+    setError(null);
+    if (email === "") {
+      setError("Email cant be empty.");
+      return;
+    }
+    try {
+      const response = await api.post("/generate-code", { email: email });
+      if (response.status === 201) {
+        setError(null);
+        setEditFlag(1);
+      }
+    } catch (error: any) {
+      setError("Error: Couldnt Generate Code.");
+    }
+  };
+
+  const BackToGenerateCode = () => {
+    setEditFlag(0);
+    setPassword("");
+    setError(null);
+  };
+
+  const VerifyCode = async () => {
+    setError(null);
+    if (password === "") {
+      setError("Enter Code in the Field.");
+      return;
+    }
+    try {
+      const response = await api.post("/verify-code", {
+        code: password,
+        email: email,
+      });
+      if (response.status === 200) {
+        setPassword("");
+        setEditFlag(2);
+      }
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.detail);
+      } else {
+        setError("Error: Couldnt verify code.");
       }
     }
   };
@@ -215,18 +262,75 @@ function Login() {
       )}
       {flag === 2 && (
         <div className="my-auto mx-auto border w-[30%] px-5">
-          <div className="flex justify-between mt-8">
-            <label className="w-[10%]">
-              <Mail />
-            </label>
-            <input
-              type="email"
-              value={email}
-              className="border-b w-full focus:outline-0 px-1"
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="E-mail"
-            />
+          <MoveLeft
+            className="mt-2 cursor-pointer"
+            onClick={() => {
+              if (editFlag === 0) {
+                BackToLogin();
+              } else BackToGenerateCode();
+            }}
+          />
+
+          <div>
+            <h1 className={`text-center text-xl`}>
+              {editFlag === 0
+                ? "Please enter your email"
+                : "Verify the Code Sent to your Email"}
+            </h1>
+            <div className="flex justify-between mt-8">
+              <label className={`${editFlag === 0 ? "w-[10%]" : "w-[25%]"}`}>
+                {editFlag === 0 ? <Mail /> : "Enter Code: "}
+              </label>
+              <input
+                type={`${editFlag === 0 ? "email" : "text"}`}
+                value={editFlag === 0 ? email : password}
+                className="border-b w-full focus:outline-0 px-1"
+                onChange={(e) =>
+                  editFlag === 0
+                    ? setEmail(e.target.value)
+                    : setPassword(e.target.value)
+                }
+                placeholder={editFlag === 0 ? "E-mail" : "Code"}
+              />
+            </div>
+            <div
+              className={`mb-5 mt-10 flex  ${
+                editFlag === 0 ? "justify-center" : "justify-between"
+              }`}
+            >
+              {editFlag === 1 && (
+                <div className="flex justify-center w-full">
+                  <button
+                    className="border py-1 px-2 cursor-pointer"
+                    onClick={GenerateCode}
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              )}
+              <div
+                className={`${
+                  editFlag === 1 ? "w-full flex justify-center" : ""
+                }`}
+              >
+                <button
+                  className={`border py-1 cursor-pointer ${
+                    editFlag === 0 ? "px-2" : "px-7"
+                  }`}
+                  onClick={() => {
+                    if (editFlag === 0) {
+                      GenerateCode();
+                    } else {
+                      VerifyCode();
+                    }
+                  }}
+                >
+                  {editFlag === 0 ? "Send Code" : "Verify"}
+                </button>
+              </div>
+            </div>
           </div>
+          <p className="text-red-500 text-center my-5">{error}</p>
         </div>
       )}
     </div>
