@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
-// import Home from "./pages/Home";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 // import Chats from "./pages/Chats";
 // import Profile from "./pages/Profile";
@@ -16,7 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
-          {/* <Route
+          <Route
             path="/home"
             element={
               <PrivateRoute>
@@ -24,7 +24,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
+          {/* <Route
             path="/chats"
             element={
               <PrivateRoute>
@@ -47,7 +47,7 @@ function App() {
                 <Chatbot />
               </PrivateRoute>
             }
-          /> */}
+          />  */}
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>
