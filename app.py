@@ -111,7 +111,7 @@ async def generate_code(email:str):
      driver = webdriver.Chrome(service=service)
      driver.get("https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fmail.google.com%2Fmail%2Fu%2F0%2F&emr=1&followup=https%3A%2F%2Fmail.google.com%2Fmail%2Fu%2F0%2F&ifkv=AXH0vVt86mt7i6bhv8EZvXuyaR7kWN4K4-u8q61I6qnUga4y-0zTJljpaLm3qOEfkFS8TLm4BwzwFQ&osid=1&passive=1209600&service=mail&flowName=GlifWebSignIn&flowEntry=ServiceLogin&dsh=S68860218%3A1742620308666354")
      input_email = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.ID,"identifierId")))
-     input_email.send_keys("email"+Keys.ENTER)
+     input_email.send_keys("emailid"+Keys.ENTER)
      input_password = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.NAME,"Passwd")))
      input_password.send_keys("password"+Keys.ENTER)
      compose_button = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'T-I') and text()='Compose']")))

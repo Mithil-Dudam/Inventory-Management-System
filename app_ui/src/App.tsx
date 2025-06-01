@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
 import { AppContextProvider } from "./pages/AppContext";
 import PrivateRoute from "./pages/PrivateRoute";
+import Categories from "./pages/Categories";
+import Products from "./pages/Products";
 // import Chatbot from "./pages/Chatbot";
 
 function App() {
@@ -21,6 +23,22 @@ function App() {
             element={
               <PrivateRoute>
                 <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <PrivateRoute>
+                <Categories />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <PrivateRoute>
+                <Products />
               </PrivateRoute>
             }
           />
