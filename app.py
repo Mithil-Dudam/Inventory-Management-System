@@ -35,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-URL_db = 'postgresql://postgres:password@localhost:5432/Inventory-Management-System' 
+URL_db = 'postgresql://postgres:password@localhost:5432/Inventory Management System' 
 
 engine = create_engine(URL_db)
 sessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
@@ -57,6 +57,11 @@ class Categories(Base):
     __tablename__ = 'Categories'
     name = Column(String, primary_key=True, index=True)
     parent = Column(String, index=True)
+    id = Column(Integer,index=True)
+
+class CategoryInfo(BaseModel):
+    name:str
+    parent:str
 
 class Products(Base):
     __tablename__ = 'Products'
@@ -66,6 +71,13 @@ class Products(Base):
     category = Column(String, ForeignKey("Categories.name"), index=True)
     price = Column(Float, index=True)
     image_url = Column(String, index=True)
+
+class ProductInfo(BaseModel):
+    name:str
+    description:str
+    category:str
+    price:float
+    image_url:str
 
 Base.metadata.create_all(bind=engine)
 
@@ -147,3 +159,35 @@ async def reset_password(user:UserInfo, db:db_dependency):
     db.commit()
     db.refresh(db_user)
     return{"Message":"Password reset successfully"}
+
+@app.post("/create-category",status_code=status.HTTP_201_CREATED)
+async def create_category(user:CategoryInfo,db:db_dependency):
+    db_category_name_exists = db.query(Categories).filter(Categories.name==user.name).first()
+    if db_category_name_exists:
+        raise HTTPException(status_code=302,detail="Category name already exists.")
+    db_category = Categories(name=user.name,parent=user.parent)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return{"message":f"category '{user.name}' added successfully"}
+
+@app.get("/all-categories",status_code=status.HTTP_200_OK)
+async def all_categories(db:db_dependency):
+    db_categories = db.query(Categories).order_by(Categories.id.asc()).all()
+    return [{"name":category.name,"parent":category.parent} for category in db_categories]
+
+@app.post("/create-product",status_code=status.HTTP_201_CREATED)
+async def create_product(user:ProductInfo,db:db_dependency):
+    db_product_exists = db.query(Products).filter(Products.name==user.name,Products.category==user.category).first()
+    if db_product_exists:
+        raise HTTPException(status_code=302,detail="Product already exists.")
+    db_product = Products(name=user.name,description=user.description,category=user.category,price=user.price,image_url=user.image_url)
+    db.add(db_product)
+    db.commit()
+    db.refresh()
+    return{"message":f"Product '{user.name}' added successfully"}
+
+@app.get("/all-products",status_code=status.HTTP_200_OK)
+async def all_products(db:db_dependency):
+    db_products = db.query(Products).order_by(Products.id.asc()).all()
+    return[{"name":product.name,"category":product.category,"price":product.price} for product in db_products]

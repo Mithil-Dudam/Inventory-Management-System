@@ -9,6 +9,11 @@ interface ProfileType {
   follows_count: number;
 }
 
+interface CategoryType {
+  name: string;
+  parent: string;
+}
+
 interface AppContextType {
   error: string | null;
   setError: (error: string | null) => void;
@@ -18,22 +23,16 @@ interface AppContextType {
   setPassword: (password: string) => void;
   role: string;
   setRole: (role: string) => void;
-  bio: string;
-  setBio: (bio: string) => void;
   userId: number;
   setUserId: (id: number) => void;
-  chatId: number;
-  setChatId: (id: number) => void;
-  username: string;
-  setUsername: (name: string) => void;
   userChoice: string;
   setUserChoice: (choice: string) => void;
-  recipient: number;
-  setRecipient: (recipient: number) => void;
   isLoggedIn: Boolean;
   setIsLoggedIn: (loggedIn: boolean) => void;
   flag: number;
   setFlag: (flag: number) => void;
+  categories: CategoryType[] | null;
+  setCategories: (categories: CategoryType[] | null) => void;
   profile: ProfileType | null;
   setProfile: (profile: ProfileType | null) => void;
   broadcasts: {
@@ -69,12 +68,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState(0);
-  const [chatId, setChatId] = useState(0);
-  const [username, setUsername] = useState("");
-  const [userChoice, setUserChoice] = useState("Overview");
-  const [recipient, setRecipient] = useState(0);
+  const [userChoice, setUserChoice] = useState("");
   const [profile, setProfile] = useState<ProfileType | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [categories, setCategories] = useState<CategoryType[] | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [flag, setFlag] = useState(0);
   const [broadcasts, setBroadcasts] = useState<
     { text: string; sent_by: number; username: string; image_url: string }[]
@@ -85,7 +82,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [editFlag, setEditFlag] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [bio, setBio] = useState("");
   const [role, setRole] = useState("");
 
   return (
@@ -93,20 +89,16 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         userId,
         setUserId,
-        chatId,
-        setChatId,
         isLoggedIn,
         setIsLoggedIn,
         flag,
         setFlag,
-        username,
-        setUsername,
+        categories,
+        setCategories,
         profile,
         setProfile,
         userChoice,
         setUserChoice,
-        recipient,
-        setRecipient,
         error,
         setError,
         broadcasts,
@@ -119,8 +111,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setPassword,
         role,
         setRole,
-        bio,
-        setBio,
         messages,
         setMessages,
       }}
