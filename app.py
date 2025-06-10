@@ -55,9 +55,9 @@ class UserInfo(BaseModel):
 
 class Categories(Base):
     __tablename__ = 'Categories'
-    name = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
     parent = Column(String, index=True)
-    id = Column(Integer,index=True)
 
 class CategoryInfo(BaseModel):
     name:str
@@ -68,7 +68,7 @@ class Products(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, index=True)
-    category = Column(String, ForeignKey("Categories.name"), index=True)
+    category = Column(Integer, ForeignKey("Categories.id"), index=True)
     price = Column(Float, index=True)
     image_url = Column(String, index=True)
 
@@ -169,7 +169,7 @@ async def create_category(user:CategoryInfo,db:db_dependency):
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
-    return{"message":f"category '{user.name}' added successfully"}
+    return{"message":f"category '{user.name}' added successfully","parent":user.parent}
 
 @app.get("/all-categories",status_code=status.HTTP_200_OK)
 async def all_categories(db:db_dependency):

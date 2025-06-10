@@ -14,6 +14,14 @@ interface CategoryType {
   parent: string;
 }
 
+interface ProductType {
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  image_url: string;
+}
+
 interface AppContextType {
   error: string | null;
   setError: (error: string | null) => void;
@@ -33,6 +41,8 @@ interface AppContextType {
   setFlag: (flag: number) => void;
   categories: CategoryType[] | null;
   setCategories: (categories: CategoryType[] | null) => void;
+  products: ProductType[] | null;
+  setProducts: (products: ProductType[] | null) => void;
   profile: ProfileType | null;
   setProfile: (profile: ProfileType | null) => void;
   broadcasts: {
@@ -59,6 +69,16 @@ interface AppContextType {
   >;
   editFlag: number;
   setEditFlag: (flag: number) => void;
+  name: string;
+  setName: (name: string) => void;
+  description: string;
+  setDescription: (description: string) => void;
+  category: string;
+  setCategory: (category: string) => void;
+  price: number;
+  setPrice: (price: number) => void;
+  imageURL: string;
+  setImageURL: (imageURL: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -71,6 +91,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userChoice, setUserChoice] = useState("");
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [categories, setCategories] = useState<CategoryType[] | null>(null);
+  const [products, setProducts] = useState<ProductType[] | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [flag, setFlag] = useState(0);
   const [broadcasts, setBroadcasts] = useState<
@@ -83,6 +104,11 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState(0);
+  const [imageURL, setImageURL] = useState("");
 
   return (
     <AppContext.Provider
@@ -91,10 +117,22 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setUserId,
         isLoggedIn,
         setIsLoggedIn,
+        name,
+        setName,
+        description,
+        setDescription,
+        category,
+        setCategory,
+        price,
+        setPrice,
+        imageURL,
+        setImageURL,
         flag,
         setFlag,
         categories,
         setCategories,
+        products,
+        setProducts,
         profile,
         setProfile,
         userChoice,

@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 function Categories() {
   const navigate = useNavigate();
-  const { setUserChoice, categories, setCategories, error, setError } =
+  const { setUserChoice, categories, setCategories, setError } =
     useAppContext();
 
   const GetAllCategories = async () => {
@@ -52,7 +52,7 @@ function Categories() {
               <button
                 className="cursor-pointer text-lg"
                 onClick={() => {
-                  setUserChoice("category");
+                  setUserChoice("Category");
                   navigate("/add");
                 }}
               >
@@ -68,8 +68,8 @@ function Categories() {
                 </p>
               </div>
             ) : (
-              categories?.map((category, index) => (
-                <div key={index}>
+              categories?.slice(1).map((category, index) => (
+                <div key={index} className="border">
                   <p>{category.name}</p>
                   <p>{category.parent}</p>
                 </div>

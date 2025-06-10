@@ -1,16 +1,76 @@
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "./AppContext";
-import { MoveLeft } from "lucide-react";
+import { MoveLeft, Images } from "lucide-react";
+import api from "../api";
+import { useEffect, useState } from "react";
 
 function Add() {
   const navigate = useNavigate();
-  const { userChoice, setUserChoice } = useAppContext();
+  const {
+    userChoice,
+    setUserChoice,
+    categories,
+    name,
+    setName,
+    description,
+    setDescription,
+    category,
+    setCategory,
+    price,
+    setPrice,
+    error,
+    setError,
+  } = useAppContext();
+  const [image, setImage] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImage(e.target.files[0]);
+      setFileName(e.target.files[0].name);
+    }
+  };
+
+  const GoBack = () => {
+    setError(null);
+    setUserChoice("");
+    setName("");
+    setCategory("");
+    setDescription("");
+    setPrice(0);
+  };
+
+  const CreateCategory = async () => {
+    if (name === "" || category === "") {
+      setError("Enter all fields.");
+      return;
+    }
+    try {
+      const response = await api.post("/create-category", {
+        name,
+        parent: category,
+      });
+      if (response.status === 201) {
+        setName("");
+        setCategory("");
+        navigate("/categories");
+      }
+    } catch (error: any) {
+      setError("");
+    }
+  };
+
+  useEffect(() => {
+    if (name !== "" || category !== "") {
+      setError(null);
+    }
+  }, [name, category]);
+
   return (
     <div className="w-screen h-screen bg-black text-white flex">
       <div className="bg-gray-700 flex flex-col w-[10%] px-5 pt-10 text-2xl border-r-6 border-black">
         <button
           className={`py-2 cursor-pointer ${
-            userChoice === "category"
+            userChoice === "Category"
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
           }`}
@@ -19,7 +79,7 @@ function Add() {
         </button>
         <button
           className={`mt-5 py-2 cursor-pointer ${
-            userChoice === "product"
+            userChoice === "Product"
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
           }`}
@@ -39,18 +99,121 @@ function Add() {
           <MoveLeft
             className="mt-1 cursor-pointer"
             onClick={() => {
-              if (userChoice === "category") {
-                setUserChoice("");
+              if (userChoice === "Category") {
+                GoBack();
                 navigate("/categories");
               } else {
-                setUserChoice("");
+                GoBack();
                 navigate("/products");
               }
             }}
           />
-          <div className="border mt-10">
-            <label>Enter Name:</label>
-            <input type="text" className="border" />
+          <h1 className=" text-center font-bold text-4xl mt-15">
+            Create {userChoice}
+          </h1>
+          <div className="mt-10 flex justify-between">
+            <label className="w-[15%]">Enter Name:</label>
+            <input
+              type="text"
+              className="border-b focus:outline-0 w-full focus:bg-gray-700 px-1 hover:bg-gray-600"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          {userChoice === "Category" ? (
+            <div className="mt-10 flex justify-between">
+              <label className="w-[15%] ">Select Parent Category:</label>
+              <select
+                className="border-b focus:outline-0 w-full focus:bg-gray-700
+                px-1 hover:bg-gray-600"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="" disabled hidden>
+                  Please select an option
+                </option>
+                {categories?.length === 0
+                  ? ""
+                  : categories?.map((category, index) => (
+                      <div key={index}>
+                        <option value={category.name}>{category.name}</option>
+                      </div>
+                    ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <div className="mt-10 flex justify-between">
+                <label className="w-[15%]">Enter Description:</label>
+                <textarea
+                  className="border-b focus:outline-0 w-full focus:bg-gray-700 px-1 hover:bg-gray-600 bg-gray-400"
+                  rows={5}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                ></textarea>
+              </div>
+              <div className="mt-10 flex justify-between">
+                <label className="w-[15%]">Select Category:</label>
+                <select
+                  className="border-b focus:outline-0 w-full focus:bg-gray-700
+                px-1 hover:bg-gray-600"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {categories?.length === 0
+                    ? ""
+                    : categories?.map((category, index) => (
+                        <div key={index}>
+                          <option>{category.name}</option>
+                        </div>
+                      ))}
+                </select>
+              </div>
+              <div className="mt-10 flex justify-between">
+                <label className="w-[15%]">Enter Price:</label>
+                <input
+                  type="number"
+                  className="border-b focus:outline-0 w-full focus:bg-gray-700 px-1 hover:bg-gray-600"
+                  value={price}
+                  onChange={(e) => setPrice(parseFloat(e.currentTarget.value))}
+                />
+              </div>
+              <div className="mt-10 flex justify-between">
+                <label className="w-[15%]">Add an Image:</label>
+                <div className="w-full flex">
+                  <label className="flex items-center px-4 py-2 bg-white text-black border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
+                    <Images className="mr-2" />
+                    <span>Choose File</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {fileName && (
+                    <p className=" text-gray-300 ml-5 my-auto">{fileName}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className=" mt-25 mx-auto text-center">
+            <button
+              className="border px-3 py-2 cursor-pointer font-semibold hover:bg-gray-700 bg-green-800"
+              onClick={() => {
+                if (userChoice === "Category") {
+                  CreateCategory();
+                } else {
+                  CreateProduct();
+                }
+              }}
+            >
+              Add {userChoice}
+            </button>
+          </div>
+          <div>
+            <p className="text-center text-red-500 my-10">{error}</p>
           </div>
         </div>
       </div>
