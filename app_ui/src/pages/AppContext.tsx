@@ -12,6 +12,7 @@ interface ProfileType {
 interface CategoryType {
   name: string;
   parent: string;
+  id: number;
 }
 
 interface ProductType {
@@ -75,6 +76,8 @@ interface AppContextType {
   setDescription: (description: string) => void;
   category: string;
   setCategory: (category: string) => void;
+  categoryID: number;
+  setCategoryID: (categoryID: number) => void;
   price: number;
   setPrice: (price: number) => void;
   imageURL: string;
@@ -107,6 +110,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [categoryID, setCategoryID] = useState(0);
   const [price, setPrice] = useState(0);
   const [imageURL, setImageURL] = useState("");
 
@@ -123,6 +127,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setDescription,
         category,
         setCategory,
+        categoryID,
+        setCategoryID,
         price,
         setPrice,
         imageURL,

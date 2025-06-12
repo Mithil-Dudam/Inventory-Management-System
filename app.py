@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy import Column, Integer, String, ForeignKey, ARRAY, Float
 
-from sqlalchemy.orm import Session,declarative_base
+from sqlalchemy.orm import Session,declarative_base,relationship
 
 from passlib.context import CryptContext
 
@@ -58,6 +58,7 @@ class Categories(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     parent = Column(String, index=True)
+    products = relationship("Products", back_populates="category_obj")
 
 class CategoryInfo(BaseModel):
     name:str
@@ -71,13 +72,7 @@ class Products(Base):
     category = Column(Integer, ForeignKey("Categories.id"), index=True)
     price = Column(Float, index=True)
     image_url = Column(String, index=True)
-
-class ProductInfo(BaseModel):
-    name:str
-    description:str
-    category:str
-    price:float
-    image_url:str
+    category_obj = relationship("Categories", back_populates="products")
 
 Base.metadata.create_all(bind=engine)
 
@@ -174,20 +169,52 @@ async def create_category(user:CategoryInfo,db:db_dependency):
 @app.get("/all-categories",status_code=status.HTTP_200_OK)
 async def all_categories(db:db_dependency):
     db_categories = db.query(Categories).order_by(Categories.id.asc()).all()
-    return [{"name":category.name,"parent":category.parent} for category in db_categories]
+    return [{"name":category.name,"parent":category.parent,"id":category.id} for category in db_categories]
+
+app.mount("/pictures", StaticFiles(directory="pictures"), name="pictures")
 
 @app.post("/create-product",status_code=status.HTTP_201_CREATED)
-async def create_product(user:ProductInfo,db:db_dependency):
-    db_product_exists = db.query(Products).filter(Products.name==user.name,Products.category==user.category).first()
+async def create_product(db:db_dependency,name:str=Form(...),categoryID:int=Form(...),price:float=Form(...),description:Optional[str]=Form(None),image:Optional[UploadFile]=File(None)):
+    db_product_exists = db.query(Products).filter(Products.name==name,Products.category==categoryID).first()
     if db_product_exists:
         raise HTTPException(status_code=302,detail="Product already exists.")
-    db_product = Products(name=user.name,description=user.description,category=user.category,price=user.price,image_url=user.image_url)
+    db_product = Products(name=name,category=categoryID,price=price)
+    if description:
+        db_product.description=description
+    if image:
+        file_location = f"pictures/{image.filename}"
+        with open(file_location, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        db_product.image_url=file_location
     db.add(db_product)
     db.commit()
-    db.refresh()
-    return{"message":f"Product '{user.name}' added successfully"}
+    db.refresh(db_product)
+    return{"message":f"Product '{name}' added successfully"}
 
 @app.get("/all-products",status_code=status.HTTP_200_OK)
 async def all_products(db:db_dependency):
     db_products = db.query(Products).order_by(Products.id.asc()).all()
-    return[{"name":product.name,"category":product.category,"price":product.price} for product in db_products]
+    return[{"name":product.name,"category":product.category_obj.name if product.category_obj else None,"price":product.price} for product in db_products]
+
+@app.delete("/delete-product",status_code=status.HTTP_200_OK)
+async def delete_product(name:str,category:str,db:db_dependency):
+    db_product = db.query(Products).join(Products.category_obj).filter(Products.name==name,Categories.name==category).first()
+    db.delete(db_product)
+    db.commit()
+    return{"message":f"Product '{name}' deleted successfully."}
+
+@app.delete("/delete-category",status_code=status.HTTP_200_OK)
+async def delete_category(name:str,parent:str,db:db_dependency):
+    products = db.query(Products).join(Products.category_obj).filter(Categories.name==name).all()
+    for product in products:
+        db.delete(product)
+    db_category = db.query(Categories).filter(Categories.name==name,Categories.parent==parent).first()
+    db.delete(db_category)
+    db.commit()
+    return{"message":f"Category '{name}' deleted successfully."}
+
+@app.get("/delete-count",status_code=status.HTTP_200_OK)
+async def delete_count(name:str,db:db_dependency):
+    count = db.query(Products).join(Products.category_obj).filter(Categories.name==name).count()
+    return{"count":count}
+

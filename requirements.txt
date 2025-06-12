@@ -6,3 +6,4 @@ psycopg2
 selenium
 passlib[bcrypt]
 bcrypt==3.2.0
+python-multipart

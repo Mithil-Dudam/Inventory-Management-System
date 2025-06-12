@@ -16,10 +16,13 @@ function Add() {
     setDescription,
     category,
     setCategory,
+    categoryID,
+    setCategoryID,
     price,
     setPrice,
     error,
     setError,
+    setCategories,
   } = useAppContext();
   const [image, setImage] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
@@ -30,12 +33,30 @@ function Add() {
     }
   };
 
+  const GetAllCategories = async () => {
+    setError(null);
+    try {
+      const response = await api.get("/all-categories");
+      if (response.status === 200) {
+        setCategories(response.data);
+      }
+    } catch (error: any) {
+      setError("Error: Couldnt fetch all categories");
+    }
+  };
+
+  useEffect(() => {
+    GetAllCategories();
+  }, []);
+
   const GoBack = () => {
     setError(null);
     setUserChoice("");
     setName("");
     setCategory("");
+    setCategoryID(0);
     setDescription("");
+    setImage(null);
     setPrice(0);
   };
 
@@ -50,8 +71,7 @@ function Add() {
         parent: category,
       });
       if (response.status === 201) {
-        setName("");
-        setCategory("");
+        GoBack();
         navigate("/categories");
       }
     } catch (error: any) {
@@ -60,10 +80,43 @@ function Add() {
   };
 
   useEffect(() => {
-    if (name !== "" || category !== "") {
+    if (name !== "" || category !== "" || price !== 0) {
       setError(null);
     }
-  }, [name, category]);
+  }, [name, category, price]);
+
+  const CreateProduct = async () => {
+    setError(null);
+    if (name === "" || categoryID === 0 || price === 0) {
+      setError("Enter all marked field.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("categoryID", categoryID.toString());
+    formData.append("price", price.toString());
+    if (description) {
+      formData.append("description", description);
+    }
+    if (image) {
+      formData.append("image", image);
+    }
+    try {
+      const response = await api.post("/create-product", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.status === 201) {
+        GoBack();
+        navigate("/products");
+      }
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.detail);
+      } else {
+        setError("Error: Couldnt create product");
+      }
+    }
+  };
 
   return (
     <div className="w-screen h-screen bg-black text-white flex">
@@ -74,6 +127,10 @@ function Add() {
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
           }`}
+          onClick={() => {
+            navigate("/categories");
+            GoBack();
+          }}
         >
           Categories
         </button>
@@ -83,13 +140,19 @@ function Add() {
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
           }`}
-          onClick={() => navigate("/products")}
+          onClick={() => {
+            navigate("/products");
+            GoBack();
+          }}
         >
           Products
         </button>
         <button
           className={`mt-5 py-2 cursor-pointer hover:bg-gray-600`}
-          onClick={() => navigate("/menu")}
+          onClick={() => {
+            navigate("/menu");
+            GoBack();
+          }}
         >
           Menu
         </button>
@@ -112,7 +175,9 @@ function Add() {
             Create {userChoice}
           </h1>
           <div className="mt-10 flex justify-between">
-            <label className="w-[15%]">Enter Name:</label>
+            <label className="w-[15%]">
+              Enter Name: <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               className="border-b focus:outline-0 w-full focus:bg-gray-700 px-1 hover:bg-gray-600"
@@ -122,7 +187,9 @@ function Add() {
           </div>
           {userChoice === "Category" ? (
             <div className="mt-10 flex justify-between">
-              <label className="w-[15%] ">Select Parent Category:</label>
+              <label className="w-[15%] ">
+                Select Parent Category: <span className="text-red-500">*</span>
+              </label>
               <select
                 className="border-b focus:outline-0 w-full focus:bg-gray-700
                 px-1 hover:bg-gray-600"
@@ -153,24 +220,33 @@ function Add() {
                 ></textarea>
               </div>
               <div className="mt-10 flex justify-between">
-                <label className="w-[15%]">Select Category:</label>
+                <label className="w-[15%]">
+                  Select Category: <span className="text-red-500">*</span>
+                </label>
                 <select
                   className="border-b focus:outline-0 w-full focus:bg-gray-700
                 px-1 hover:bg-gray-600"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  value={categoryID}
+                  onChange={(e) =>
+                    setCategoryID(parseInt(e.currentTarget.value))
+                  }
                 >
+                  <option value={0} disabled hidden>
+                    Please select an option
+                  </option>
                   {categories?.length === 0
                     ? ""
-                    : categories?.map((category, index) => (
+                    : categories?.slice(1).map((category, index) => (
                         <div key={index}>
-                          <option>{category.name}</option>
+                          <option value={category.id}>{category.name}</option>
                         </div>
                       ))}
                 </select>
               </div>
               <div className="mt-10 flex justify-between">
-                <label className="w-[15%]">Enter Price:</label>
+                <label className="w-[15%]">
+                  Enter Price: <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
                   className="border-b focus:outline-0 w-full focus:bg-gray-700 px-1 hover:bg-gray-600"
