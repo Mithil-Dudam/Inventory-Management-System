@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status, Depends, UploadFile, File, Form
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status, Depends, UploadFile, File, Form, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -167,8 +167,11 @@ async def create_category(user:CategoryInfo,db:db_dependency):
     return{"message":f"category '{user.name}' added successfully","parent":user.parent}
 
 @app.get("/all-categories",status_code=status.HTTP_200_OK)
-async def all_categories(db:db_dependency):
-    db_categories = db.query(Categories).order_by(Categories.id.asc()).all()
+async def all_categories(db:db_dependency,category:Optional[str]=Query(None)):
+    if category:
+        db_categories = db.query(Categories).filter(Categories.parent==category).order_by(Categories.id.asc()).all()
+    else:
+        db_categories = db.query(Categories).order_by(Categories.id.asc()).all()
     return [{"name":category.name,"parent":category.parent,"id":category.id} for category in db_categories]
 
 app.mount("/pictures", StaticFiles(directory="pictures"), name="pictures")
@@ -218,3 +221,7 @@ async def delete_count(name:str,db:db_dependency):
     count = db.query(Products).join(Products.category_obj).filter(Categories.name==name).count()
     return{"count":count}
 
+@app.get("/parent-categories",status_code=status.HTTP_200_OK)
+async def parent_categories(db:db_dependency):
+    categories = db.query(Categories).filter(Categories.parent=="--PARENT--").all()
+    return{"name":category.name for category in categories}

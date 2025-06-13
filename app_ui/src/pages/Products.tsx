@@ -52,21 +52,35 @@ function Products() {
     }
   };
 
+  const Reset = () => {
+    setFlag(0);
+    setName("");
+    setCategory("");
+  }
+
   return (
     <div className="w-screen h-screen bg-black text-white flex">
       <div className="bg-gray-700 flex flex-col w-[10%] px-5 pt-10 text-2xl border-r-6 border-black">
         <button
-          className="hover:bg-gray-600 py-2 cursor-pointer"
-          onClick={() => navigate("/categories")}
+          className="hover:bg-gray-600 py-2 cursor-pointer overflow-hidden text-ellipsis"
+          onClick={() => {
+            Reset()
+            navigate("/categories")
+          }}
         >
           Categories
         </button>
-        <button className="mt-5 py-2 cursor-pointer bg-black border rounded">
+        <button className="mt-5 py-2 cursor-pointer bg-black border rounded overflow-hidden text-ellipsis" onClick={()=>Reset()}>
           Products
         </button>
         <button
-          className="mt-5 py-2 cursor-pointer hover:bg-gray-600"
-          onClick={() => navigate("/menu")}
+          className="mt-5 py-2 cursor-pointer hover:bg-gray-600 overflow-hidden text-ellipsis"
+          onClick={() => {
+            setFlag(0);
+            setName("");
+            setCategory("--PARENT--")
+            navigate("/menu")
+          }}
         >
           Menu
         </button>

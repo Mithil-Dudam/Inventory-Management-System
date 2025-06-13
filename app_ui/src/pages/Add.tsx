@@ -122,7 +122,7 @@ function Add() {
     <div className="w-screen h-screen bg-black text-white flex">
       <div className="bg-gray-700 flex flex-col w-[10%] px-5 pt-10 text-2xl border-r-6 border-black">
         <button
-          className={`py-2 cursor-pointer ${
+          className={`py-2 cursor-pointer overflow-hidden text-ellipsis ${
             userChoice === "Category"
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
@@ -135,7 +135,7 @@ function Add() {
           Categories
         </button>
         <button
-          className={`mt-5 py-2 cursor-pointer ${
+          className={`mt-5 py-2 cursor-pointer overflow-hidden text-ellipsis ${
             userChoice === "Product"
               ? "border rounded bg-black"
               : "hover:bg-gray-600"
@@ -148,7 +148,7 @@ function Add() {
           Products
         </button>
         <button
-          className={`mt-5 py-2 cursor-pointer hover:bg-gray-600`}
+          className={`mt-5 py-2 cursor-pointer hover:bg-gray-600 overflow-hidden text-ellipsis`}
           onClick={() => {
             navigate("/menu");
             GoBack();
@@ -158,7 +158,7 @@ function Add() {
         </button>
       </div>
       <div className="w-full h-full p-10 flex bg-gray-400">
-        <div className="bg-black px-10 w-full rounded">
+        <div className="bg-black px-10 w-full rounded overflow-auto">
           <MoveLeft
             className="mt-1 cursor-pointer"
             onClick={() => {

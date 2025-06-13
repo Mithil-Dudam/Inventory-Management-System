@@ -56,10 +56,7 @@ function Categories() {
         `/delete-category?name=${name}&parent=${category}`
       );
       if (response.status === 200) {
-        setFlag(0);
-        setName("");
-        setCategory("");
-        setCount(-1);
+        Reset()
         await GetAllCategories();
       }
     } catch (error: any) {
@@ -67,21 +64,39 @@ function Categories() {
     }
   };
 
+  const Reset = () => {
+    setFlag(0);
+    setName("");
+    setCategory("");
+    setCount(-1);
+  }
+
   return (
     <div className="w-screen h-screen bg-black text-white flex">
       <div className="bg-gray-700 flex flex-col w-[10%] px-5 pt-10 text-2xl border-r-6 border-black">
-        <button className="bg-black py-2 cursor-pointer border rounded">
+        <button className="bg-black py-2 cursor-pointer border rounded overflow-hidden text-ellipsis" onClick={()=>{
+          Reset()
+        }}>
           Categories
         </button>
         <button
-          className="mt-5 py-2 cursor-pointer hover:bg-gray-600"
-          onClick={() => navigate("/products")}
+          className="mt-5 py-2 cursor-pointer hover:bg-gray-600 overflow-hidden text-ellipsis"
+          onClick={() => {
+            Reset()
+            navigate("/products")
+          }}
         >
           Products
         </button>
         <button
-          className="mt-5 py-2 cursor-pointer hover:bg-gray-600"
-          onClick={() => navigate("/menu")}
+          className="mt-5 py-2 cursor-pointer hover:bg-gray-600 overflow-hidden text-ellipsis"
+          onClick={() => {
+            setFlag(0);
+            setName("");
+            setCategory("--PARENT--")
+            setCount(-1)
+            navigate("/menu")
+          }}
         >
           Menu
         </button>
@@ -105,7 +120,7 @@ function Categories() {
           <div className="h-[95%] bg-slate-900 border-black border">
             {flag === 0 && (
               <div>
-                {categories?.length === 0 ? (
+                {categories?.slice(1).length === 0 ? (
                   <div className="flex h-[100%]">
                     <p className="mx-auto my-auto text-2xl font-semibold">
                       No categories added yet.
