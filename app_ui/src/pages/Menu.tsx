@@ -5,27 +5,59 @@ import { useEffect } from "react";
 
 function Menu() {
   const navigate = useNavigate();
-  const {categories,setError,category,setCategories} = useAppContext()
+  const {
+    categories,
+    setError,
+    category,
+    setCategories,
+    setCategory,
+    products,
+    setProducts,
+  } = useAppContext();
 
   const GetAllCategories = async () => {
-    setError(null)
-    const formData = new FormData()
-    formData.append("category",category)
-    try{
-      const response = await api.get("/all-categories",{
-        params:{category}
-      })
-      if(response.status===200){
-        setCategories(response.data)
+    setError(null);
+    const formData = new FormData();
+    formData.append("category", category);
+    try {
+      const response = await api.get("/all-categories", {
+        params: { category },
+      });
+      if (response.status === 200) {
+        setCategories(response.data);
       }
-    }catch(error:any){
-      setError("Error: Couldnt get all categories")
+    } catch (error: any) {
+      setError("Error: Couldnt get all categories");
     }
-  }
+  };
 
-  useEffect(()=>{
-    GetAllCategories()
-  },[])
+  const GetAllProducts = async () => {
+    setError(null);
+    if (categories?.length === 0) {
+      try {
+        const response = await api.get("/all-products", {
+          params: { category },
+        });
+        if (response.status === 200) {
+          setProducts(response.data);
+        }
+      } catch (error: any) {
+        setError("Error: Couldnt fetch all products");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (category !== "") {
+      GetAllCategories();
+    }
+  }, [category]);
+
+  useEffect(() => {
+    if (categories?.length === 0) {
+      GetAllProducts();
+    }
+  }, [categories]);
 
   return (
     <div className="w-screen h-screen bg-black text-white flex">
@@ -46,15 +78,35 @@ function Menu() {
           Menu
         </button>
       </div>
-      <div className="w-full">
-        <h1 className="text-center w-full mt-10 text-3xl"><span className="border-b">Menu</span></h1>
-        {categories?.length===0?(
-          <div className="text-center">No categories</div>
-        ):(
-          <div className="mt-10 border">
-            {categories?.map((category,index)=>(
+      <div className="w-full flex flex-col">
+        <h1 className="text-center w-full mt-10 text-3xl">
+          <span className="border-b">Menu</span>
+        </h1>
+        {categories?.length === 0 ? (
+          <div className="border h-[80%] w-[50%] mx-auto my-auto rounded bg-gray-700 overflow-auto">
+            <h1 className="text-center text-5xl font-semibold mt-5">
+              <span className="border-b">{category}</span>
+            </h1>
+            {products?.map((product, index) => (
               <div key={index} className="">
-                <p className="hover:bg-gray-700 cursor-pointer mb-5">{category.name}</p>
+                <div className="hover:bg-black cursor-pointer my-10 text-center text-3xl ">
+                  {product.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="border h-[80%] w-[50%] mx-auto my-auto rounded bg-gray-700 overflow-auto">
+            {categories?.map((category, index) => (
+              <div key={index} className="">
+                <div
+                  className="hover:bg-black cursor-pointer my-10 text-center text-3xl "
+                  onClick={() => {
+                    setCategory(category.name);
+                  }}
+                >
+                  <span className="">{category.name}</span>
+                </div>
               </div>
             ))}
           </div>

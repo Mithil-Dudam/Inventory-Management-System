@@ -195,8 +195,11 @@ async def create_product(db:db_dependency,name:str=Form(...),categoryID:int=Form
     return{"message":f"Product '{name}' added successfully"}
 
 @app.get("/all-products",status_code=status.HTTP_200_OK)
-async def all_products(db:db_dependency):
-    db_products = db.query(Products).order_by(Products.id.asc()).all()
+async def all_products(db:db_dependency, category:Optional[str]=Query(None)):
+    if category:
+        db_products = db.query(Products).join(Products.category_obj).filter(Categories.name==category).order_by(Products.id.asc()).all()
+    else:
+        db_products = db.query(Products).order_by(Products.id.asc()).all()
     return[{"name":product.name,"category":product.category_obj.name if product.category_obj else None,"price":product.price} for product in db_products]
 
 @app.delete("/delete-product",status_code=status.HTTP_200_OK)
@@ -220,8 +223,3 @@ async def delete_category(name:str,parent:str,db:db_dependency):
 async def delete_count(name:str,db:db_dependency):
     count = db.query(Products).join(Products.category_obj).filter(Categories.name==name).count()
     return{"count":count}
-
-@app.get("/parent-categories",status_code=status.HTTP_200_OK)
-async def parent_categories(db:db_dependency):
-    categories = db.query(Categories).filter(Categories.parent=="--PARENT--").all()
-    return{"name":category.name for category in categories}

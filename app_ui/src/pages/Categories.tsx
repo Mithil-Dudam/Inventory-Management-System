@@ -56,7 +56,7 @@ function Categories() {
         `/delete-category?name=${name}&parent=${category}`
       );
       if (response.status === 200) {
-        Reset()
+        Reset();
         await GetAllCategories();
       }
     } catch (error: any) {
@@ -69,21 +69,24 @@ function Categories() {
     setName("");
     setCategory("");
     setCount(-1);
-  }
+  };
 
   return (
     <div className="w-screen h-screen bg-black text-white flex">
       <div className="bg-gray-700 flex flex-col w-[10%] px-5 pt-10 text-2xl border-r-6 border-black">
-        <button className="bg-black py-2 cursor-pointer border rounded overflow-hidden text-ellipsis" onClick={()=>{
-          Reset()
-        }}>
+        <button
+          className="bg-black py-2 cursor-pointer border rounded overflow-hidden text-ellipsis"
+          onClick={() => {
+            Reset();
+          }}
+        >
           Categories
         </button>
         <button
           className="mt-5 py-2 cursor-pointer hover:bg-gray-600 overflow-hidden text-ellipsis"
           onClick={() => {
-            Reset()
-            navigate("/products")
+            Reset();
+            navigate("/products");
           }}
         >
           Products
@@ -93,9 +96,9 @@ function Categories() {
           onClick={() => {
             setFlag(0);
             setName("");
-            setCategory("--PARENT--")
-            setCount(-1)
-            navigate("/menu")
+            setCategory("--PARENT--");
+            setCount(-1);
+            navigate("/menu");
           }}
         >
           Menu
@@ -117,7 +120,7 @@ function Categories() {
               </button>
             </div>
           </div>
-          <div className="h-[95%] bg-slate-900 border-black border">
+          <div className="h-[95%] bg-slate-900 border-black border overflow-auto">
             {flag === 0 && (
               <div>
                 {categories?.slice(1).length === 0 ? (
