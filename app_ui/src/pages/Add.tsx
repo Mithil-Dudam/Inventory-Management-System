@@ -23,6 +23,10 @@ function Add() {
     error,
     setError,
     setCategories,
+    editFlag,
+    setEditFlag,
+    id,
+    setId,
   } = useAppContext();
   const [image, setImage] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
@@ -36,7 +40,7 @@ function Add() {
   const GetAllCategories = async () => {
     setError(null);
     try {
-      const response = await api.get("/all-categories");
+      const response = await api.post("/all-categories");
       if (response.status === 200) {
         setCategories(response.data);
       }
@@ -58,6 +62,8 @@ function Add() {
     setDescription("");
     setImage(null);
     setPrice(0);
+    setEditFlag(0);
+    setId(0);
   };
 
   const CreateCategory = async () => {
@@ -71,6 +77,26 @@ function Add() {
         parent: category,
       });
       if (response.status === 201) {
+        GoBack();
+        navigate("/categories");
+      }
+    } catch (error: any) {
+      setError("");
+    }
+  };
+
+  const EditCategory = async () => {
+    setError(null);
+    if (name === "" || category === "") {
+      setError("Enter all fields.");
+      return;
+    }
+    try {
+      const response = await api.post(`/edit-category?id=${id}`, {
+        name,
+        parent: category,
+      });
+      if (response.status === 200) {
         GoBack();
         navigate("/categories");
       }
@@ -106,6 +132,39 @@ function Add() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.status === 201) {
+        GoBack();
+        navigate("/products");
+      }
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.detail);
+      } else {
+        setError("Error: Couldnt create product");
+      }
+    }
+  };
+
+  const EditProduct = async () => {
+    setError(null);
+    if (name === "" || categoryID === 0 || price === 0) {
+      setError("Enter all marked field.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("categoryID", categoryID.toString());
+    formData.append("price", price.toString());
+    if (description) {
+      formData.append("description", description);
+    }
+    if (image) {
+      formData.append("image", image);
+    }
+    try {
+      const response = await api.post(`/edit-product?id=${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.status === 200) {
         GoBack();
         navigate("/products");
       }
@@ -172,7 +231,7 @@ function Add() {
             }}
           />
           <h1 className=" text-center font-bold text-4xl mt-15">
-            Create {userChoice}
+            {editFlag === 0 ? "Create" : "Edit"} {userChoice}
           </h1>
           <div className="mt-10 flex justify-between">
             <label className="w-[15%]">
@@ -279,13 +338,21 @@ function Add() {
               className="border px-3 py-2 cursor-pointer font-semibold hover:bg-gray-700 bg-green-800"
               onClick={() => {
                 if (userChoice === "Category") {
-                  CreateCategory();
+                  if (editFlag === 0) {
+                    CreateCategory();
+                  } else {
+                    EditCategory();
+                  }
                 } else {
-                  CreateProduct();
+                  if (editFlag === 0) {
+                    CreateProduct();
+                  } else {
+                    EditProduct();
+                  }
                 }
               }}
             >
-              Add {userChoice}
+              {editFlag === 0 ? "Add" : "Edit"} {userChoice}
             </button>
           </div>
           <div>

@@ -24,6 +24,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
 import shutil
+import os
 
 app = FastAPI()
 
@@ -157,19 +158,33 @@ async def reset_password(user:UserInfo, db:db_dependency):
 
 @app.post("/create-category",status_code=status.HTTP_201_CREATED)
 async def create_category(user:CategoryInfo,db:db_dependency):
-    db_category_name_exists = db.query(Categories).filter(Categories.name==user.name).first()
+    db_category_name_exists = db.query(Categories).filter(Categories.name==user.name,Categories.parent==user.parent).first()
     if db_category_name_exists:
         raise HTTPException(status_code=302,detail="Category name already exists.")
     db_category = Categories(name=user.name,parent=user.parent)
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
-    return{"message":f"category '{user.name}' added successfully","parent":user.parent}
+    return {"message":f"category '{user.name}' added successfully","parent":user.parent}
 
-@app.get("/all-categories",status_code=status.HTTP_200_OK)
-async def all_categories(db:db_dependency,category:Optional[str]=Query(None)):
-    if category:
+@app.post("/edit-category",status_code=status.HTTP_200_OK)
+async def edit_category(user:CategoryInfo,id:int,db:db_dependency):
+    db_category = db.query(Categories).filter(Categories.id==id).first()
+    db_category.name = user.name
+    db_category.parent = user.parent
+    db.commit()
+    db.refresh(db_category)
+    return{"message":f"Category updated successfully"}
+
+@app.post("/all-categories",status_code=status.HTTP_200_OK)
+async def all_categories(db:db_dependency,category:Optional[str]=Form(None),parent:Optional[str]=Form(None),search:Optional[str]=Form(None)):
+    if search:
+        db_categories = db.query(Categories).filter(Categories.name.ilike(f"%{search}%")).order_by(Categories.id.asc()).all()
+    elif category:
         db_categories = db.query(Categories).filter(Categories.parent==category).order_by(Categories.id.asc()).all()
+    elif parent:
+        temp = db.query(Categories).filter(Categories.name==parent).first()
+        db_categories = db.query(Categories).filter(Categories.parent==temp.parent).order_by(Categories.id.asc()).all()
     else:
         db_categories = db.query(Categories).order_by(Categories.id.asc()).all()
     return [{"name":category.name,"parent":category.parent,"id":category.id} for category in db_categories]
@@ -194,13 +209,38 @@ async def create_product(db:db_dependency,name:str=Form(...),categoryID:int=Form
     db.refresh(db_product)
     return{"message":f"Product '{name}' added successfully"}
 
-@app.get("/all-products",status_code=status.HTTP_200_OK)
-async def all_products(db:db_dependency, category:Optional[str]=Query(None)):
-    if category:
+@app.post("/edit-product",status_code=status.HTTP_200_OK)
+async def create_product(id:int,db:db_dependency,name:str=Form(...),categoryID:int=Form(...),price:float=Form(...),description:Optional[str]=Form(None),image:Optional[UploadFile]=File(None)):
+    db_product = db.query(Products).filter(Products.id==id).first()
+    db_product.name=name
+    db_product.category=categoryID
+    db_product.price=price
+    if description is not None:
+        db_product.description=description
+    if image:
+        if db_product.image_url and os.path.exists(db_product.image_url):
+            os.remove(db_product.image_url)
+
+        file_location = f"pictures/{image.filename}"
+        with open(file_location, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        db_product.image_url=file_location
+    db.commit()
+    db.refresh(db_product)
+    return{"message":f"Product updated successfully"}
+
+@app.post("/all-products",status_code=status.HTTP_200_OK)
+async def all_products(db:db_dependency, category:Optional[str]=Form(None),search:Optional[str]=Form(None),parent:Optional[str]=Form(None)):
+    if search:
+        db_products = db.query(Products).filter(Products.name.ilike(f"%{search}%")).order_by(Products.id.asc()).all()
+    elif category:
         db_products = db.query(Products).join(Products.category_obj).filter(Categories.name==category).order_by(Products.id.asc()).all()
+    elif parent:
+        temp = db.query(Products).join(Products.category_obj).filter(Categories.name==parent).first()
+        db_products = db.query(Products).join(Products.category_obj).filter(Categories.parent==temp.parent).order_by(Products.id.asc()).all()
     else:
         db_products = db.query(Products).order_by(Products.id.asc()).all()
-    return[{"name":product.name,"category":product.category_obj.name if product.category_obj else None,"price":product.price} for product in db_products]
+    return[{"name":product.name,"category":product.category_obj.name if product.category_obj else None,"price":product.price,"description":product.description,"image_url":product.image_url,"id":product.id,"category_id":product.category_obj.id} for product in db_products]
 
 @app.delete("/delete-product",status_code=status.HTTP_200_OK)
 async def delete_product(name:str,category:str,db:db_dependency):

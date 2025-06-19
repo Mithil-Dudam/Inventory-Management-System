@@ -2,8 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-// import Chats from "./pages/Chats";
-// import Profile from "./pages/Profile";
 import PageNotFound from "./pages/PageNotFound";
 import { AppContextProvider } from "./pages/AppContext";
 import PrivateRoute from "./pages/PrivateRoute";
@@ -11,14 +9,13 @@ import Categories from "./pages/Categories";
 import Products from "./pages/Products";
 import Menu from "./pages/Menu";
 import Add from "./pages/Add";
-// import Chatbot from "./pages/Chatbot";
 
 function App() {
   return (
     <AppContextProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Categories />} />
+          <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/home"
@@ -60,30 +57,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          {/* <Route
-            path="/chats"
-            element={
-              <PrivateRoute>
-                <Chats />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/chatbot"
-            element={
-              <PrivateRoute>
-                <Chatbot />
-              </PrivateRoute>
-            }
-          />  */}
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>

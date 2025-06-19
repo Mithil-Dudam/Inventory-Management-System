@@ -17,23 +17,49 @@ function Products() {
     setName,
     category,
     setCategory,
+    search,
+    setSearch,
+    setId,
+    setEditFlag,
+    setPrice,
+    setDescription,
+    setCategoryID,
   } = useAppContext();
 
-  const GetAllProducts = async () => {
+  const GetAllProducts = async (search?: string) => {
     setError(null);
-    try {
-      const response = await api.get("/all-products");
-      if (response.status === 200) {
-        setProducts(response.data);
+    if (search) {
+      const formData = new FormData();
+      formData.append("search", search);
+      try {
+        const response = await api.post("/all-products", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (response.status === 200) {
+          setProducts(response.data);
+        }
+      } catch (error: any) {
+        setError("Error: Couldnt fetch all products");
       }
-    } catch (error: any) {
-      setError("Error: Couldnt fetch all products");
+    } else {
+      try {
+        const response = await api.post("/all-products");
+        if (response.status === 200) {
+          setProducts(response.data);
+        }
+      } catch (error: any) {
+        setError("Error: Couldnt fetch all products");
+      }
     }
   };
 
   useEffect(() => {
-    GetAllProducts();
-  }, []);
+    if (search !== "") {
+      GetAllProducts(search);
+    } else {
+      GetAllProducts();
+    }
+  }, [search]);
 
   const DeleteProduct = async () => {
     setError(null);
@@ -56,7 +82,8 @@ function Products() {
     setFlag(0);
     setName("");
     setCategory("");
-  }
+    setSearch("");
+  };
 
   return (
     <div className="w-screen h-screen bg-black text-white flex">
@@ -64,13 +91,16 @@ function Products() {
         <button
           className="hover:bg-gray-600 py-2 cursor-pointer overflow-hidden text-ellipsis"
           onClick={() => {
-            Reset()
-            navigate("/categories")
+            Reset();
+            navigate("/categories");
           }}
         >
           Categories
         </button>
-        <button className="mt-5 py-2 cursor-pointer bg-black border rounded overflow-hidden text-ellipsis" onClick={()=>Reset()}>
+        <button
+          className="mt-5 py-2 cursor-pointer bg-black border rounded overflow-hidden text-ellipsis"
+          onClick={Reset}
+        >
           Products
         </button>
         <button
@@ -78,32 +108,48 @@ function Products() {
           onClick={() => {
             setFlag(0);
             setName("");
-            setCategory("--PARENT--")
-            navigate("/menu")
+            setCategory("--PARENT--");
+            setSearch("");
+            navigate("/menu");
           }}
         >
-          Menu
+          Inventory
         </button>
       </div>
-      <div className="w-full h-full flex">
+      <div className="w-[90%] h-full flex">
         <div className=" my-auto mx-auto w-[85%] h-[85%] bg-gray-700">
           {flag === 0 && (
-            <div>
-              <div className="flex justify-end mx-5 py-1">
-                <div className="cursor-pointer flex bg-black rounded-full pl-2 pr-3 py-1">
-                  <Plus className="mr-2 my-auto" size={20} />
-                  <button
-                    className="cursor-pointer text-lg"
-                    onClick={() => {
-                      setUserChoice("Product");
-                      navigate("/add");
+            <div className="w-full h-full">
+              <div className="flex justify-between mx-5 py-1">
+                <div className="flex-grow w-full" />
+                <div className="w-full my-auto">
+                  <input
+                    type="text"
+                    placeholder="Search ..."
+                    className="w-full border rounded px-1"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
                     }}
-                  >
-                    Add Product
-                  </button>
+                  />
+                </div>
+                <div className="w-full justify-end flex">
+                  <div className="cursor-pointer flex bg-black rounded-full pl-2 pr-3 py-1">
+                    <Plus className="mr-2 my-auto" size={20} />
+                    <button
+                      className="cursor-pointer text-lg"
+                      onClick={() => {
+                        Reset();
+                        setUserChoice("Product");
+                        navigate("/add");
+                      }}
+                    >
+                      Add Product
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="h-[95%] bg-slate-900 border-black border flex flex-col">
+              <div className="h-[95%] bg-slate-900 border-black border overflow-auto">
                 {products?.length === 0 ? (
                   <div className="flex h-[100%]">
                     <p className="mx-auto my-auto text-2xl font-semibold">
@@ -145,7 +191,19 @@ function Products() {
                           </td>
                           <td className="border border-gray-500 px-4 py-2">
                             <div className="flex justify-center space-x-4">
-                              <SquarePen className="cursor-pointer text-blue-400" />
+                              <SquarePen
+                                className="cursor-pointer text-blue-400"
+                                onClick={() => {
+                                  setName(product.name);
+                                  setCategoryID(product.category_id);
+                                  setId(product.id);
+                                  setPrice(product.price);
+                                  setDescription(product.description);
+                                  setUserChoice("Product");
+                                  setEditFlag(1);
+                                  navigate("/add");
+                                }}
+                              />
                               <Trash2
                                 className="cursor-pointer text-red-400"
                                 onClick={() => {

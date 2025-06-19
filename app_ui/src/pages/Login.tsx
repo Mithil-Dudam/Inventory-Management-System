@@ -5,8 +5,7 @@ import { Mail, LockKeyhole, MoveLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const {
     role,
@@ -22,7 +21,7 @@ function Login() {
     error,
     setError,
     setUserId,
-    setIsLoggedIn
+    setIsLoggedIn,
   } = useAppContext();
 
   const BackToSelectLogin = () => {
@@ -98,8 +97,14 @@ function Login() {
         setEmail("");
         setPassword("");
         setUserId(response.data.user_id);
-        setIsLoggedIn(true)
-        navigate("/home")
+        setIsLoggedIn(true);
+        setFlag(0);
+        setEditFlag(0);
+        if (role === "Admin") {
+          navigate("/home");
+        } else {
+          navigate("/menu");
+        }
       }
     } catch (error: any) {
       if (error.response) {
@@ -140,7 +145,9 @@ function Login() {
       return;
     }
     try {
-      const response = await api.post(`/verify-code?code=${password}&email=${email}`);
+      const response = await api.post(
+        `/verify-code?code=${password}&email=${email}`
+      );
       if (response.status === 200) {
         setPassword("");
         setEditFlag(2);
@@ -155,24 +162,28 @@ function Login() {
   };
 
   const ResetPassword = async () => {
-    setError(null)
-    if(password===""){
-      setError("Password cant be empty.")
-      return
+    setError(null);
+    if (password === "") {
+      setError("Password cant be empty.");
+      return;
     }
-    try{
-      const response = await api.post("/reset-password",{email,password,role})
-      if(response.status===200){
-        setEmail("")
-        setPassword("")
-        setFlag(1)
-        setEditFlag(0)
-        setError(null)
+    try {
+      const response = await api.post("/reset-password", {
+        email,
+        password,
+        role,
+      });
+      if (response.status === 200) {
+        setEmail("");
+        setPassword("");
+        setFlag(1);
+        setEditFlag(0);
+        setError(null);
       }
-    }catch(error:any){
-      setError("Error: Couldnt reset password")
+    } catch (error: any) {
+      setError("Error: Couldnt reset password");
     }
-  }
+  };
 
   return (
     <div className="bg-black w-screen h-screen text-white flex flex-col">
@@ -299,14 +310,36 @@ function Login() {
             <h1 className={`text-center text-xl`}>
               {editFlag === 0
                 ? "Please enter your email"
-                : editFlag===1?"Verify the Code Sent to your Email":"Password Reset"}
+                : editFlag === 1
+                ? "Verify the Code Sent to your Email"
+                : "Password Reset"}
             </h1>
             <div className="flex justify-between mt-8">
-              <label className={`${editFlag === 0 ? "w-[10%]" : editFlag===1?"w-[25%]":"w-[80%]"}`}>
-                {editFlag === 0 ? <Mail /> : editFlag===1?"Enter Code: ":"Enter new password: "}
+              <label
+                className={`${
+                  editFlag === 0
+                    ? "w-[10%]"
+                    : editFlag === 1
+                    ? "w-[25%]"
+                    : "w-[80%]"
+                }`}
+              >
+                {editFlag === 0 ? (
+                  <Mail />
+                ) : editFlag === 1 ? (
+                  "Enter Code: "
+                ) : (
+                  "Enter new password: "
+                )}
               </label>
               <input
-                type={`${editFlag === 0 ? "email" : editFlag===1?"text":"password"}`}
+                type={`${
+                  editFlag === 0
+                    ? "email"
+                    : editFlag === 1
+                    ? "text"
+                    : "password"
+                }`}
                 value={editFlag === 0 ? email : password}
                 className="border-b w-full focus:outline-0 px-1"
                 onChange={(e) =>
@@ -314,7 +347,13 @@ function Login() {
                     ? setEmail(e.target.value)
                     : setPassword(e.target.value)
                 }
-                placeholder={editFlag === 0 ? "E-mail" : editFlag===1?"Code":"Password"}
+                placeholder={
+                  editFlag === 0
+                    ? "E-mail"
+                    : editFlag === 1
+                    ? "Code"
+                    : "Password"
+                }
               />
             </div>
             <div
@@ -344,14 +383,18 @@ function Login() {
                   onClick={() => {
                     if (editFlag === 0) {
                       GenerateCode();
-                    } else if(editFlag===1){
+                    } else if (editFlag === 1) {
                       VerifyCode();
-                    }else{
-                      ResetPassword()
+                    } else {
+                      ResetPassword();
                     }
                   }}
                 >
-                  {editFlag === 0 ? "Send Code" : editFlag === 1 ?"Verify":"Reset"}
+                  {editFlag === 0
+                    ? "Send Code"
+                    : editFlag === 1
+                    ? "Verify"
+                    : "Reset"}
                 </button>
               </div>
             </div>

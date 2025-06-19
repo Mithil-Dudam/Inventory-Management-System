@@ -17,23 +17,46 @@ function Categories() {
     setName,
     category,
     setCategory,
+    search,
+    setSearch,
+    setId,
+    setEditFlag,
   } = useAppContext();
 
-  const GetAllCategories = async () => {
+  const GetAllCategories = async (search?: string) => {
     setError(null);
-    try {
-      const response = await api.get("/all-categories");
-      if (response.status === 200) {
-        setCategories(response.data);
+    if (search) {
+      const formData = new FormData();
+      formData.append("search", search);
+      try {
+        const response = await api.post("/all-categories", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (response.status === 200) {
+          setCategories(response.data);
+        }
+      } catch (error: any) {
+        setError("Error: Couldnt fetch all categories");
       }
-    } catch (error: any) {
-      setError("Error: Couldnt fetch all categories");
+    } else {
+      try {
+        const response = await api.post("/all-categories");
+        if (response.status === 200) {
+          setCategories(response.data);
+        }
+      } catch (error: any) {
+        setError("Error: Couldnt fetch all categories");
+      }
     }
   };
 
   useEffect(() => {
-    GetAllCategories();
-  }, []);
+    if (search !== "") {
+      GetAllCategories(search);
+    } else {
+      GetAllCategories();
+    }
+  }, [search]);
 
   const [count, setCount] = useState(-1);
 
@@ -69,6 +92,7 @@ function Categories() {
     setName("");
     setCategory("");
     setCount(-1);
+    setSearch("");
   };
 
   return (
@@ -98,30 +122,46 @@ function Categories() {
             setName("");
             setCategory("--PARENT--");
             setCount(-1);
+            setSearch("");
             navigate("/menu");
           }}
         >
-          Menu
+          Inventory
         </button>
       </div>
       <div className="w-full h-full flex">
         <div className=" my-auto mx-auto w-[85%] h-[85%] bg-gray-700">
-          <div className="flex justify-end mx-5 py-1">
-            <div className="cursor-pointer flex bg-black rounded-full pl-2 pr-3 py-1">
-              <Plus className="mr-2 my-auto" size={20} />
-              <button
-                className="cursor-pointer text-lg"
-                onClick={() => {
-                  setUserChoice("Category");
-                  navigate("/add");
+          <div className="flex justify-between mx-5 py-1">
+            <div className="flex-grow w-full" />
+            <div className="w-full my-auto">
+              <input
+                type="text"
+                placeholder="Search ..."
+                className="w-full border rounded px-1"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
                 }}
-              >
-                Add Category
-              </button>
+              />
+            </div>
+            <div className="w-full justify-end flex">
+              <div className="cursor-pointer bg-black rounded-full pl-2 pr-3 py-1 flex">
+                <Plus className="mr-2 my-auto" size={20} />
+                <button
+                  className="cursor-pointer text-lg"
+                  onClick={() => {
+                    Reset();
+                    setUserChoice("Category");
+                    navigate("/add");
+                  }}
+                >
+                  Add Category
+                </button>
+              </div>
             </div>
           </div>
           <div className="h-[95%] bg-slate-900 border-black border overflow-auto">
-            {flag === 0 && (
+            {flag === 0 && search === "" && (
               <div>
                 {categories?.slice(1).length === 0 ? (
                   <div className="flex h-[100%]">
@@ -145,33 +185,115 @@ function Categories() {
                       </tr>
                     </thead>
                     <tbody>
-                      {categories?.slice(1).map((category, index) => (
-                        <tr
-                          key={index}
-                          className="bg-gray-700 hover:bg-gray-600"
-                        >
-                          <td className="border border-gray-500 px-4 py-2 truncate">
-                            {category.name}
-                          </td>
-                          <td className="border border-gray-500 px-4 py-2 truncate">
-                            {category.parent}
-                          </td>
-                          <td className="border border-gray-500 px-4 py-2">
-                            <div className="flex justify-center space-x-4">
-                              <SquarePen className="cursor-pointer text-blue-400" />
-                              <Trash2
-                                className="cursor-pointer text-red-400"
-                                onClick={async () => {
-                                  setFlag(1);
-                                  setName(category.name);
-                                  setCategory(category.parent);
-                                  await GetDeleteCount(category.name);
-                                }}
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      {categories
+                        ?.filter((category) => category.name !== "--PARENT--")
+                        .map((category, index) => (
+                          <tr
+                            key={index}
+                            className="bg-gray-700 hover:bg-gray-600"
+                          >
+                            <td className="border border-gray-500 px-4 py-2 truncate">
+                              {category.name}
+                            </td>
+                            <td className="border border-gray-500 px-4 py-2 truncate">
+                              {category.parent}
+                            </td>
+                            <td className="border border-gray-500 px-4 py-2">
+                              <div className="flex justify-center space-x-4">
+                                <SquarePen
+                                  className="cursor-pointer text-blue-400"
+                                  onClick={() => {
+                                    setName(category.name);
+                                    setCategory(category.parent);
+                                    setId(category.id);
+                                    setUserChoice("Category");
+                                    setEditFlag(1);
+                                    navigate("/add");
+                                  }}
+                                />
+                                <Trash2
+                                  className="cursor-pointer text-red-400"
+                                  onClick={async () => {
+                                    setFlag(1);
+                                    setName(category.name);
+                                    setCategory(category.parent);
+                                    await GetDeleteCount(category.name);
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+            {flag === 0 && search !== "" && (
+              <div>
+                {categories?.filter(
+                  (category) => category.name !== "--PARENT--"
+                ).length === 0 ? (
+                  <div className="flex h-[100%]">
+                    <p className="mx-auto my-auto text-2xl font-semibold">
+                      Category doesnt exist
+                    </p>
+                  </div>
+                ) : (
+                  <table className="table-fixed w-full border-collapse border border-gray-500 text-center text-white mt-10">
+                    <thead className="bg-gray-800">
+                      <tr>
+                        <th className="border border-gray-500 px-4 py-2 w-2/5">
+                          Name
+                        </th>
+                        <th className="border border-gray-500 px-4 py-2 w-2/5">
+                          Parent Category
+                        </th>
+                        <th className="border border-gray-500 px-4 py-2 w-1/5">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories
+                        ?.filter((category) => category.name !== "--PARENT--")
+                        .map((category, index) => (
+                          <tr
+                            key={index}
+                            className="bg-gray-700 hover:bg-gray-600"
+                          >
+                            <td className="border border-gray-500 px-4 py-2 truncate">
+                              {category.name}
+                            </td>
+                            <td className="border border-gray-500 px-4 py-2 truncate">
+                              {category.parent}
+                            </td>
+                            <td className="border border-gray-500 px-4 py-2">
+                              <div className="flex justify-center space-x-4">
+                                <SquarePen
+                                  className="cursor-pointer text-blue-400"
+                                  onClick={() => {
+                                    setName(category.name);
+                                    setCategory(category.parent);
+                                    setId(category.id);
+                                    setUserChoice("Category");
+                                    setEditFlag(1);
+                                    navigate("/add");
+                                  }}
+                                />
+                                <Trash2
+                                  className="cursor-pointer text-red-400"
+                                  onClick={async () => {
+                                    setFlag(1);
+                                    setName(category.name);
+                                    setCategory(category.parent);
+                                    await GetDeleteCount(category.name);
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 )}

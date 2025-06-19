@@ -1,14 +1,5 @@
 import { createContext, useContext, useState } from "react";
 
-interface ProfileType {
-  username: string;
-  password: string;
-  bio: string;
-  email: string;
-  total_posts: number;
-  follows_count: number;
-}
-
 interface CategoryType {
   name: string;
   parent: string;
@@ -21,6 +12,8 @@ interface ProductType {
   category: string;
   price: number;
   image_url: string;
+  id: number;
+  category_id: number;
 }
 
 interface AppContextType {
@@ -44,30 +37,6 @@ interface AppContextType {
   setCategories: (categories: CategoryType[] | null) => void;
   products: ProductType[] | null;
   setProducts: (products: ProductType[] | null) => void;
-  profile: ProfileType | null;
-  setProfile: (profile: ProfileType | null) => void;
-  broadcasts: {
-    text: string;
-    sent_by: number;
-    username: string;
-    image_url: string;
-  }[];
-  setBroadcasts: React.Dispatch<
-    React.SetStateAction<
-      { text: string; sent_by: number; username: string; image_url: string }[]
-    >
-  >;
-  messages: {
-    text: string;
-    sent_by: number;
-    image_url: string;
-    chat_id: number;
-  }[];
-  setMessages: React.Dispatch<
-    React.SetStateAction<
-      { text: string; sent_by: number; image_url: string; chat_id: number }[]
-    >
-  >;
   editFlag: number;
   setEditFlag: (flag: number) => void;
   name: string;
@@ -82,6 +51,10 @@ interface AppContextType {
   setPrice: (price: number) => void;
   imageURL: string;
   setImageURL: (imageURL: string) => void;
+  search: string;
+  setSearch: (search: string) => void;
+  id: number;
+  setId: (id: number) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -92,27 +65,22 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState(0);
   const [userChoice, setUserChoice] = useState("");
-  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [categories, setCategories] = useState<CategoryType[] | null>(null);
   const [products, setProducts] = useState<ProductType[] | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [flag, setFlag] = useState(0);
-  const [broadcasts, setBroadcasts] = useState<
-    { text: string; sent_by: number; username: string; image_url: string }[]
-  >([]);
-  const [messages, setMessages] = useState<
-    { text: string; sent_by: number; image_url: string; chat_id: number }[]
-  >([]);
   const [editFlag, setEditFlag] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("--PARENT--");
   const [categoryID, setCategoryID] = useState(0);
   const [price, setPrice] = useState(0);
   const [imageURL, setImageURL] = useState("");
+  const [search, setSearch] = useState("");
+  const [id, setId] = useState(0);
 
   return (
     <AppContext.Provider
@@ -133,20 +101,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setPrice,
         imageURL,
         setImageURL,
+        search,
+        setSearch,
         flag,
         setFlag,
         categories,
         setCategories,
         products,
         setProducts,
-        profile,
-        setProfile,
         userChoice,
         setUserChoice,
         error,
         setError,
-        broadcasts,
-        setBroadcasts,
         editFlag,
         setEditFlag,
         email,
@@ -155,8 +121,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setPassword,
         role,
         setRole,
-        messages,
-        setMessages,
+        id,
+        setId,
       }}
     >
       {children}
